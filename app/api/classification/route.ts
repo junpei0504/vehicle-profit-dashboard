@@ -1,0 +1,3 @@
+import {db,guardWrite,json,error} from '../../server/store';
+import {normalizeType} from '../../model';
+export async function POST(req:Request){try{guardWrite(req);const {code,type}=await req.json() as {code:string;type:string};if(!/^\d{5}$/.test(code)||typeof type!=='string'||type.length>40)throw new Error('車両コードと車種を確認してください。');const row=await db().prepare("SELECT value FROM settings WHERE key='typeOverrides'").first<{value:string}>();const map=row?JSON.parse(row.value):{};if(type.trim())map[code]=normalizeType(type);else delete map[code];await db().prepare("INSERT INTO settings(key,value) VALUES('typeOverrides',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(JSON.stringify(map)).run();return json({ok:true});}catch(e){return error(e);}}

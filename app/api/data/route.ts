@@ -1,0 +1,2 @@
+import {datasets,db,isAdmin,json,error} from '../../server/store';
+export async function GET(req:Request){try{const months=await datasets();const mapping=await db().prepare("SELECT value FROM settings WHERE key='typeOverrides'").first<{value:string}>();return json({months,overrides:mapping?JSON.parse(mapping.value):{},isAdmin:isAdmin(req),user:req.headers.get('oai-authenticated-user-email')||'管理者'});}catch(e){return error(e);}}

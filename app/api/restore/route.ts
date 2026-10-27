@@ -1,0 +1,3 @@
+import {db,guardWrite,json,error,save} from '../../server/store';
+import {validateMonth} from '../../model';
+export async function POST(req:Request){try{guardWrite(req);const {id,expectedHash}=await req.json() as {id:string;expectedHash:string};const r=await db().prepare('SELECT payload,file_key FROM import_history WHERE id=?').bind(id).first<{payload:string;file_key:string|null}>();if(!r)throw new Error('履歴が見つかりません。');const d=JSON.parse(r.payload);validateMonth(d);await save(d,expectedHash,r.file_key,req.headers.get('oai-authenticated-user-email')||'管理者','履歴から復元');return json({ok:true});}catch(e){return error(e);}}

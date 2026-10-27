@@ -1,0 +1,3 @@
+import {env} from 'cloudflare:workers';
+import {db,error} from '../../server/store';
+export async function GET(req:Request){try{const month=new URL(req.url).searchParams.get('month');const r=await db().prepare('SELECT file_key,payload FROM months WHERE month=?').bind(month).first<{file_key:string;payload:string}>();if(!r?.file_key||!env.BUCKET)return new Response('元ファイルが見つかりません。',{status:404});const file=await env.BUCKET.get(r.file_key);if(!file)return new Response('元ファイルが見つかりません。',{status:404});const d=JSON.parse(r.payload);return new Response(file.body,{headers:{'Content-Type':'application/octet-stream','Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(d.fileName)}`,'Cache-Control':'no-store'}});}catch(e){return error(e);}}
